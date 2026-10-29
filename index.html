@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>AI 時代起步診斷</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700;900&family=Quicksand:wght@500;700&family=Unbounded:wght@800;900&display=swap">
+<style>
+/* Layout: poster-portfolio grammar — warm off-white paper, ink-black outlines, rounded panels, one big orange colour block per view, hashtag pills, round chevron buttons. Views: home → talk (answer panel in page flow, never fixed) → report. */
+:root{
+  --paper:#EEE9E1; --surface:#FBF8F3; --ink:#16130F; --muted:#6E655B; --hair:#CDC4B8;
+  --accent:#F2551D; --accent-ink:#FFFFFF; --accent-soft:#FBE0D2; --sun:#F6A623; --sun-soft:#FBEBCB;
+  --calm:#3E7B57; --good:#3E7B57; --warn:#B86A0B; --bad:#D23A1A; --warn-soft:#FBEBCB; --bad-soft:#FBE0D2;
+  --sunk:#E3DCD2; --line:#16130F;
+  --f-display:"Unbounded","Noto Sans TC",system-ui,sans-serif;
+  --f-zh:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-body:"Quicksand","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --bw:1.5px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#171411; --surface:#211D19; --ink:#F2ECE3; --muted:#A79C90; --hair:#3B342D;
+  --accent:#FF6A33; --accent-ink:#FFFFFF; --accent-soft:#3D2316; --sun:#F6B04A; --sun-soft:#3A2D16;
+  --calm:#6DBB8C; --good:#6DBB8C; --warn:#F0A54A; --bad:#FF7350; --warn-soft:#3A2D16; --bad-soft:#3D2316;
+  --sunk:#2C2722; --line:#F2ECE3; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#171411; --surface:#211D19; --ink:#F2ECE3; --muted:#A79C90; --hair:#3B342D;
+  --accent:#FF6A33; --accent-ink:#FFFFFF; --accent-soft:#3D2316; --sun:#F6B04A; --sun-soft:#3A2D16;
+  --calm:#6DBB8C; --good:#6DBB8C; --warn:#F0A54A; --bad:#FF7350; --warn-soft:#3A2D16; --bad-soft:#3D2316;
+  --sunk:#2C2722; --line:#F2ECE3; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;font-weight:500;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;width:100%}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.zh{font-family:var(--f-zh)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;line-height:1;padding:5px 10px;border-radius:999px;background:var(--ink);color:var(--paper);white-space:nowrap}
+.pill.o{background:var(--accent);color:var(--accent-ink)}
+.pill.line{background:none;color:var(--ink);border:var(--bw) solid var(--ink)}
+.chev{flex:none;width:26px;height:26px;border-radius:50%;border:var(--bw) solid var(--ink);display:inline-grid;place-items:center;background:none;cursor:pointer;padding:0}
+.chev svg{width:12px;height:12px;transition:transform .2s}
+.collapsed .chev svg{transform:rotate(-90deg)}
+.ava{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);background:var(--surface);color:var(--ink);display:grid;place-items:center;font-family:var(--f-zh);font-weight:900;font-size:16px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:var(--bw) solid var(--ink);padding-block:10px}
+.top-row{display:flex;align-items:center;gap:12px}
+.mark{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.logo{flex:none;width:40px;height:40px;display:block}
+.mark-t{min-width:0;line-height:1.25}
+.mark-t b{display:block;font-family:var(--f-zh);font-size:14.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mark-t span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-btn{flex:none;background:none;border:var(--bw) solid var(--ink);border-radius:999px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.link-btn:hover{background:var(--ink);color:var(--paper)}
+.prog{margin-top:10px;display:grid;gap:6px}
+.prog-dots{display:flex;gap:4px}
+.prog-dots i{flex:1;height:5px;border-radius:3px;background:var(--hair)}
+.prog-dots i.done{background:var(--ink)}
+.prog-dots i.on{background:var(--accent)}
+.prog-meta{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--muted)}
+.prog-meta b{color:var(--ink);font-family:var(--f-zh);font-weight:900}
+.prog-meta .num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+main{padding-block:20px 48px}
+
+/* home */
+.home{display:grid;gap:22px}
+.poster{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:20px;align-items:end}
+.poster-l{display:grid;gap:14px;align-content:end}
+.arrow{width:96px;height:96px;color:var(--ink)}
+.tags{display:grid;gap:0}
+.tags span{display:block;padding:7px 0;border-bottom:var(--bw) solid var(--hair);font-size:15px;text-align:right;white-space:nowrap}
+.tags span:last-child{border-color:var(--ink)}
+.block{position:relative;aspect-ratio:1/1;max-width:100%;border-radius:24px;background:var(--accent);color:var(--accent-ink);overflow:hidden;container-type:inline-size}
+.block .b-ai{position:absolute;right:6%;top:2%;font-family:var(--f-display);font-weight:900;font-size:52cqw;line-height:.95;letter-spacing:-.04em}
+.block .b-zh{position:absolute;left:7%;bottom:20%;font-family:var(--f-zh);font-weight:900;font-size:21cqw;line-height:1.05;writing-mode:horizontal-tb}
+.block .b-yr{position:absolute;left:7%;bottom:6%;font-family:var(--f-display);font-weight:800;font-size:7.5cqw;letter-spacing:.02em}
+.block .b-tag{position:absolute;right:6%;bottom:7%;font-size:3.6cqw;font-weight:700;border:2px solid currentColor;border-radius:999px;padding:.4em .9em}
+.headline{display:flex;align-items:center;justify-content:space-between;gap:12px;border-block:var(--bw) solid var(--ink);padding-block:12px}
+.headline h1{margin:0;font-family:var(--f-zh);font-weight:900;font-size:clamp(22px,5.4vw,32px);line-height:1.3;text-wrap:balance}
+.headline h1 em{font-style:normal;color:var(--accent)}
+.round{flex:none;width:40px;height:40px;border-radius:50%;border:var(--bw) solid var(--ink);display:grid;place-items:center}
+.round svg{width:16px;height:16px}
+.duo{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:14px}
+.hello{background:var(--ink);color:var(--paper);border-radius:22px;padding:20px;display:grid;align-content:space-between;gap:18px;min-height:240px}
+.hello small{font-size:13px;opacity:.75}
+.hello b{display:block;font-family:var(--f-zh);font-weight:900;font-size:clamp(28px,6vw,38px);line-height:1.15}
+.hello p{margin:0;font-size:12.5px;opacity:.8;line-height:1.6}
+.hello .role{display:inline-block;margin-top:10px;font-size:12px;font-weight:700;line-height:1;padding:5px 11px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+.hello ul{margin:0;padding:0;list-style:none;display:grid;gap:9px;font-family:var(--f-zh);font-size:13.5px;line-height:1.55}
+.hello li{display:grid;grid-template-columns:14px 1fr;gap:4px}
+.hello li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:6px}
+.hello .solo{opacity:1;font-family:var(--f-zh);font-weight:700;font-size:13.5px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--paper) 30%,transparent)}
+.quote{margin:0;padding-left:14px;border-left:3px solid var(--accent);display:grid;gap:8px;font-family:var(--f-zh);font-size:15.5px;font-weight:500;line-height:1.75}
+.quote p{margin:0}
+.quote cite{font-style:normal;font-size:13px;font-weight:700;color:var(--muted)}
+.quote cite::before{content:"— "}
+.panel{background:var(--surface);border:var(--bw) solid var(--ink);border-radius:22px;padding:16px 18px;display:grid;gap:8px;min-width:0}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.panel-h h2,.panel-h h3{margin:0;font-family:var(--f-zh);font-weight:900;font-size:19px;line-height:1.35}
+.panel p{margin:0}
+.muted{color:var(--muted)}
+.sech{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.sech h2{margin:0;font-family:var(--f-zh);font-weight:900;font-size:22px}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.path{all:unset;box-sizing:border-box;cursor:pointer;border-radius:22px;padding:18px;display:grid;gap:10px;align-content:start;transition:transform .15s}
+.path:hover{transform:translateY(-3px)}
+.path:focus-visible{outline:2.5px solid var(--accent);outline-offset:3px}
+.path.ink{background:var(--ink);color:var(--paper)}
+.path.ink .pill{background:var(--paper);color:var(--ink)}
+.path.org{background:var(--accent);color:var(--accent-ink)}
+.path.org .pill{background:var(--accent-ink);color:var(--accent)}
+.path .ico{width:36px;height:36px}
+.path b{font-family:var(--f-zh);font-weight:900;font-size:24px;line-height:1.3}
+.path p{margin:0;font-size:14px;opacity:.85}
+.path .rule{height:0;border-top:2px solid currentColor;opacity:.9;position:relative;margin:4px 0}
+.path .rule::before,.path .rule::after{content:"";position:absolute;top:-4px;width:6px;height:6px;border-radius:50%;background:currentColor}
+.path .rule::before{left:0}.path .rule::after{right:0}
+.path .foot{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700}
+.gets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.get{border:var(--bw) solid var(--ink);border-radius:18px;padding:14px;display:grid;gap:6px;align-content:start;background:var(--surface);min-width:0}
+.get b{font-family:var(--f-zh);font-weight:900;font-size:15.5px}
+.get span{font-size:13px;color:var(--muted);line-height:1.6}
+.resume{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--sun-soft);border:var(--bw) solid var(--ink);border-radius:18px;padding:12px 16px}
+.resume p{margin:0;flex:1;min-width:180px}
+.fine{font-size:12.5px;color:var(--muted);margin:0}
+
+/* thread */
+.thread{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;align-items:flex-end;max-width:92%}
+.row .ava{width:30px;height:30px;font-size:14px;margin-bottom:2px}
+.row.cont .ava{visibility:hidden}
+.bub{background:var(--surface);border:var(--bw) solid var(--ink);border-radius:18px 18px 18px 6px;padding:10px 14px;min-width:0}
+.bub .qid{display:inline-block;font-family:var(--f-body);font-size:11px;font-weight:700;line-height:1;padding:4px 8px;border-radius:999px;background:var(--ink);color:var(--paper);margin-right:8px;vertical-align:2px}
+.bub .q{font-family:var(--f-zh);font-size:16px;font-weight:700;line-height:1.6}
+.bub .hint{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.bub.calm{background:var(--sun-soft)}
+.bub.calm::before{content:"緩解一下";display:inline-block;font-size:11px;font-weight:700;line-height:1;padding:4px 9px;border-radius:999px;background:var(--sun);color:#2A1A05;margin-bottom:6px}
+.bub.note{background:transparent;border:var(--bw) dashed var(--hair);color:var(--muted);font-size:14px}
+.me{align-self:flex-end;max-width:80%;background:var(--accent);color:var(--accent-ink);border-radius:18px 18px 6px 18px;padding:8px 15px;font-size:14.5px;font-weight:700}
+.chap{align-self:stretch;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:16px 0 4px;padding-bottom:8px;border-bottom:var(--bw) solid var(--ink)}
+.chap div{display:grid;gap:4px}
+.chap em{font-style:normal}
+.chap b{font-family:var(--f-zh);font-weight:900;font-size:22px;line-height:1.25}
+.chap .round{width:32px;height:32px}
+.past .bub,.past .me{opacity:.66}
+.typing{display:inline-flex;gap:4px;padding:4px 2px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--ink);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.pop{animation:pop .22s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* answer panel (in page flow) */
+.dock{margin-top:14px;background:var(--surface);border:2px solid var(--ink);border-radius:22px;padding:14px;box-shadow:5px 5px 0 var(--ink)}
+.dock-body{display:grid;gap:8px}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;width:100%;background:var(--surface);border:var(--bw) solid var(--ink);border-radius:14px;padding:11px 14px;cursor:pointer;transition:background .12s;font-family:var(--f-zh);font-size:15px;font-weight:500;line-height:1.5}
+.opt:hover{background:var(--accent-soft)}
+.opt kbd{flex:none;font-family:var(--f-body);font-size:12px;font-weight:700;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:var(--bw) solid var(--ink)}
+.opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.opt[aria-pressed="true"] kbd{background:var(--accent-ink);color:var(--accent);border-color:var(--accent-ink)}
+.lk{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lk button{background:var(--surface);border:var(--bw) solid var(--ink);border-radius:14px;padding:12px 0;cursor:pointer;font-family:var(--f-display);font-size:18px;font-weight:800}
+.lk button:hover{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.lk-ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.field{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
+.field input{width:100%;min-width:0;font:inherit;font-size:16px;padding:11px 14px;border-radius:14px;border:var(--bw) solid var(--ink);background:var(--paper);color:var(--ink)}
+.field input:focus{outline:2.5px solid var(--accent);outline-offset:1px}
+.field .btn{min-width:76px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--ink);color:var(--paper);border:var(--bw) solid var(--ink);border-radius:999px;padding:10px 20px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none}
+.btn.o{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:none;color:var(--ink)}
+.btn[disabled]{opacity:.35;cursor:not-allowed}
+.dock-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.dock-foot button{background:none;border:0;color:var(--muted);cursor:pointer;padding:4px 0;font-weight:700}
+.dock-foot button:hover{color:var(--ink)}
+.err{color:var(--bad);font-size:13px}
+.kbd-hint{display:none}
+@media (hover:hover) and (min-width:700px){.kbd-hint{display:inline}}
+
+#pick,#book{scroll-margin-top:96px}
+/* report */
+.rep{display:grid;gap:16px}
+.hero{background:var(--accent);color:var(--accent-ink);border-radius:26px;padding:22px;display:grid;gap:16px;position:relative;overflow:hidden}
+.hero .eyebrow{font-size:12.5px;font-weight:700;opacity:.9}
+.hero-top{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.grade{width:92px;height:92px;border-radius:50%;border:3px solid currentColor;display:grid;place-items:center;font-family:var(--f-display);font-weight:900;font-size:50px;line-height:1}
+.grade.word{font-family:var(--f-zh);font-size:22px}
+.hero h2{margin:0;font-family:var(--f-zh);font-weight:900;font-size:26px;line-height:1.3;text-wrap:balance}
+.hero p{margin:6px 0 0;font-size:14.5px;opacity:.92}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{background:#16130F;color:#F6F1EA;border-radius:16px;padding:12px;min-width:0;display:grid;gap:6px;align-content:start}
+.tile em{font-style:normal;justify-self:start;font-size:11px;font-weight:700;line-height:1;padding:4px 8px;border-radius:999px;background:#F6F1EA;color:#16130F}
+.tile b{display:block;font-family:var(--f-display);font-weight:800;font-size:24px;font-variant-numeric:tabular-nums;line-height:1.2}
+.tile b small{font-size:11px;opacity:.6}
+.tile b.txt{font-family:var(--f-zh);font-weight:900;font-size:16px;line-height:1.45}
+.hero .btn{justify-self:start;background:var(--accent-ink);color:var(--accent);border-color:var(--accent-ink)}
+.sec{background:var(--surface);border:var(--bw) solid var(--ink);border-radius:22px;padding:18px 20px;display:grid;gap:12px;min-width:0}
+.sec>h3{margin:0;display:flex;align-items:center;gap:10px;font-family:var(--f-zh);font-weight:900;font-size:19px;line-height:1.35;cursor:pointer}
+.sec>h3 small{font-family:var(--f-body);font-weight:700;font-size:10.5px;letter-spacing:.08em;color:var(--muted);flex:1}
+.sec.collapsed>*:not(h3){display:none}
+.sec p{margin:0}
+.viz{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center}
+.viz>*{min-width:0}
+.viz svg{width:100%;height:auto;display:block}
+.dims{display:grid;gap:9px}
+.dim{display:grid;grid-template-columns:5.6em 1fr auto;gap:10px;align-items:center;font-size:14px;font-family:var(--f-zh)}
+.dim .bar{height:10px;border-radius:5px;border:var(--bw) solid var(--ink);overflow:hidden;background:var(--surface)}
+.dim .bar b{display:block;height:100%;background:var(--ink)}
+.dim.low .bar b{background:var(--accent)}
+.dim .n{font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.dim.low span:first-child{color:var(--accent);font-weight:700}
+.anx{background:var(--sun-soft)}
+.anx-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.anx-top b{font-family:var(--f-display);font-weight:900;font-size:44px;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.anx-top span{font-family:var(--f-zh);font-weight:900}
+.meter{position:relative;height:12px;border-radius:6px;border:var(--bw) solid var(--ink);background:linear-gradient(90deg,var(--calm),var(--sun),var(--accent))}
+.meter i{position:absolute;top:-6px;width:6px;height:20px;border-radius:3px;background:var(--ink);transform:translateX(-50%);box-shadow:0 0 0 2px var(--surface)}
+.meter-l{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.steps{margin:0;padding:0;list-style:none;display:grid;gap:8px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:26px 1fr;gap:8px;counter-increment:s;font-size:14.5px;font-family:var(--f-zh)}
+.steps li::before{content:counter(s);width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--paper);font-family:var(--f-body);font-weight:700;font-size:12px;display:grid;place-items:center;margin-top:2px}
+.flag{border:var(--bw) solid var(--ink);border-radius:16px;padding:12px 14px;display:grid;gap:4px;background:var(--bad-soft)}
+.flag b::before{content:"紅旗";display:inline-block;font-size:11px;font-weight:700;line-height:1;padding:4px 8px;border-radius:999px;background:var(--bad);color:#fff;margin-right:8px;vertical-align:2px}
+.flag.warn{background:var(--warn-soft)}
+.flag.warn b::before{content:"注意";background:var(--sun);color:#2A1A05}
+.flag span{font-size:14px;color:var(--muted)}
+.list{display:grid;gap:10px}
+.card{border:var(--bw) solid var(--ink);border-radius:16px;padding:12px 14px;display:grid;gap:4px;font-family:var(--f-zh)}
+.card .meta{font-size:13px;color:var(--muted)}
+.card .meta span{color:var(--ink);font-weight:700}
+.card .pct{display:inline-block;font-family:var(--f-body);font-size:11px;font-weight:700;line-height:1;padding:4px 8px;border-radius:999px;background:var(--ink);color:var(--paper);margin-left:8px;vertical-align:2px}
+.plan{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.plan div{background:#16130F;color:#F6F1EA;border-radius:18px;padding:14px;font-size:14px;min-width:0;display:grid;gap:6px;align-content:start;font-family:var(--f-zh)}
+.plan em{font-style:normal;justify-self:start;font-family:var(--f-body);font-size:11px;font-weight:700;line-height:1;padding:4px 8px;border-radius:999px;background:#F6F1EA;color:#16130F}
+.plan b{font-weight:900;font-size:15.5px}
+.plan span{opacity:.85;font-size:13.5px;line-height:1.6}
+.foot-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.copied{font-size:13px;color:var(--good);font-weight:700}
+.book{border-width:2px;box-shadow:5px 5px 0 var(--accent)}
+.book label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.book input,.book textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:var(--bw) solid var(--ink);border-radius:12px;padding:9px 12px;width:100%}
+.book input:focus,.book textarea:focus{outline:2.5px solid var(--accent);outline-offset:1px}
+.book textarea{min-height:80px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;background:none;border:var(--bw) solid var(--ink);border-radius:999px;padding:5px 14px;cursor:pointer;font-size:14px;font-weight:700}
+.chips button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.out{white-space:pre-wrap;background:var(--paper);border:var(--bw) dashed var(--ink);border-radius:12px;padding:12px 14px;font-size:14px;font-family:var(--f-zh)}
+.contact code{font-family:var(--f-mono);background:var(--paper);padding:1px 6px;border-radius:4px}
+
+@media (max-width:620px){
+ .poster{grid-template-columns:1fr}.poster-l{order:2;grid-template-columns:auto 1fr;align-items:end}.arrow{width:64px;height:64px}
+ .duo,.paths,.gets,.viz,.plan,.two{grid-template-columns:1fr}
+ .hello{min-height:0}
+ .hero-top{grid-template-columns:auto 1fr}.grade{width:70px;height:70px;font-size:38px}.grade.word{font-size:17px}
+ .hero h2{font-size:21px}.tiles{gap:6px}.tile{padding:10px 9px}.tile b{font-size:19px}.tile b.txt{font-size:14px}
+ .row{max-width:96%}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<header class="top gutter">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="mark"><img class="logo" src="data:image/png;base64,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" alt="" width="40" height="40"><div class="mark-t"><b>AI 時代起步診斷</b><span id="sub">李煜｜行銷・創業人</span></div></div>
+      <button class="link-btn" id="restart" type="button" hidden>重新開始</button>
+    </div>
+    <div class="prog" id="prog" hidden>
+      <div class="prog-meta"><span id="prog-sec"></span><span class="num" id="prog-num"></span></div>
+      <div class="prog-dots" id="prog-dots"></div>
+    </div>
+  </div>
+</header>
+<main class="gutter"><div class="wrap">
+  <section id="home" class="home"></section>
+  <section id="talk" hidden><div class="thread" id="thread" aria-live="polite"></div><div class="dock" id="dock" hidden><div id="dock-in"></div></div></section>
+  <section id="report" class="rep" hidden></section>
+</div></main>
+
+<script>
+/* 預約管道：填入後，預約區會顯示對應按鈕。留空時，填寫者複製預約訊息後傳給你。 */
+const CONTACT={ line:'@402cgabo', url:'' };
+
+const SKILL=['不會','懂概念','做過且有成果','能教別人'];
+const partner=a=>a.t_mode&&a.t_mode.v===1;
+const solo=a=>a.t_mode&&a.t_mode.v===0;
+const isCreator=a=>a.kind&&a.kind.v===1;
+
+/* ===================== 路線 A：想創業／做自媒體 ===================== */
+const A_DIMS=[
+ {k:'X',n:'AI 適應力',s:'AI',w:10,intro:'先從 AI 聊起。這段不考你懂多少，只是看你現在跟 AI 的距離。'},
+ {k:'M',n:'動機與初心',s:'動機',w:10,intro:'聊聊你為什麼想做這件事。動機決定你能撐多久。'},
+ {k:'P',n:'個性與心理特質',s:'個性',w:10,g:{like:.4,sit:.6},intro:'接下來是個性。前面幾題用 1–5 分評「像不像你」，後面幾題是情境。照直覺回答，沒有標準答案。'},
+ {k:'A',n:'核心能力',s:'能力',w:18,g:{skill:.6,mind:.4},intro:'盤點能力。每一項請用「最近一次真的做過」來判斷，不是「應該會」。'},
+ {k:'R',n:'資源盤點',s:'資源',w:14,g:{fin:.5,net:.2,time:.3},intro:'談錢、人脈和時間。最重要的數字是「跑道」：不靠事業收入，你能生活幾個月。'},
+ {k:'V',n:'點子與市場驗證',s:'驗證',w:14,g:{ev:.5,q:.5},intro:'現在看點子本身。新創最常見的失敗原因是市場不需要，所以這段只認證據。'},
+ {k:'T',n:'團隊與合夥',s:'團隊',w:8,intro:'誰來補你的短板？合夥結構安全嗎？'},
+ {k:'L',n:'生活與風險承受',s:'生活',w:8,intro:'很多人不是輸在能力，而是被家庭壓力或身心耗竭拖垮。這段確認你的生活撐不撐得住。'},
+ {k:'C',n:'學習力與教練性',s:'教練性',w:8,intro:'最後一段：你聽不聽得進回饋。在 AI 時代，這比任何一項技能都重要。'}
+];
+const A_Q=[
+ {id:'name',pre:1,type:'text',text:'怎麼稱呼你？',ph:'例如：小陳'},
+ {id:'kind',pre:1,type:'choice',text:'你想做的比較接近哪一種？',options:[['開公司、開店或賣產品',null],['經營自媒體、個人品牌',null],['兩者都有：用自媒體帶動事業',null]]},
+ // X：AI
+ {id:'x1',dim:'X',type:'choice',text:'想到 AI，你最常出現哪一種感覺？',options:[['怕被取代，有點恐慌',1,1],['資訊太多，不知道從哪裡開始',2,.8],['好奇，但一直沒時間碰',3,.5],['有在用，但不確定用得對不對',4,.3],['很踏實，AI 已經是我的工具',5,.05]],
+  react:x=>x.v<=1?'這是現在最常見的兩種感覺，你不是一個人。多數焦慮來自「不知道」，不是「做不到」。這份診斷會幫你把範圍縮小到下一步。':null,calm:1},
+ {id:'x2',dim:'X',type:'choice',text:'過去一個月，你用 AI 工具的頻率是？',options:[['幾乎沒用',1,.8],['偶爾試試',2.5,.5],['每週幾次',4,.25],['每天都用',5,.1]]},
+ {id:'x3',dim:'X',type:'choice',text:'你用 AI 做過最進階的事是哪一種？',options:[['只有聊天、問問題',1],['寫文案、整理資料',2.5],['做圖、影片或簡報',3.5],['把好幾個步驟串成固定流程',5]]},
+ {id:'x4',dim:'X',type:'choice',text:'在你想做的事業裡，哪一塊最容易被 AI 取代或壓價？',options:[['沒想過',1,.7],['想過，但很模糊',2.5,.5],['說得出來，也想好怎麼做出差異',5,.1]]},
+ {id:'x5',dim:'X',type:'choice',text:'如果 AI 幫你省下一半工作時間，你會拿來做什麼？',options:[['不知道',1],['先好好休息',2],['做更多同樣的事',3],['做只有我能做的事：經營關係、判斷、創意',5]]},
+ {id:'x6',dim:'X',type:'choice',text:'AI 的新聞或新工具，會讓你遲遲不敢做決定嗎？',options:[['常常，總覺得等一下會有更好的',1,1],['偶爾',3,.5],['幾乎不會',5,.1]],
+  react:x=>x.v===0?'新工具每週都會出現，等不完的。工具會換，你對客戶的理解不會過期，先用手邊的就好。':null,calm:1},
+ // M
+ {id:'m1',dim:'M',type:'choice',text:'用一句話說，你為什麼現在想做？',options:[['主要是想離開現在的工作或老闆',1],['想賺更多錢、財務自由',2],['想證明自己、做自己想做的事',3],['有一個我很想解決的問題，或很想服務的一群人',5]],
+  react:x=>x.v===0?'了解。想離開現職很常見，但它是推力，撐不了太久。後面我陪你找找有沒有拉力。':null},
+ {id:'m2',dim:'M',type:'choice',text:'這件事跟你的關係是什麼？為什麼是你來做？',options:[['看到別人做得不錯',1],['看到市場很大、趨勢很好',2],['我在這個領域做過幾年',4],['我自己深受這個問題困擾，也懂這一行',5]]},
+ {id:'m3',dim:'M',type:'choice',text:'如果做了三年，收入仍跟現在差不多，你還會繼續嗎？',options:[['不會，那就沒意義了',1],['很難說',2.5],['會，但我會先設好停損條件',4],['會，我在意的不只是錢，也清楚什麼時候該停',5]]},
+ {id:'m4',dim:'M',type:'choice',text:'有沒有一件事，是沒人要求、你卻自己做到底的？',options:[['想不太到',1],['有，但沒做出什麼成果',2.5],['有，而且做出了具體成果',4],['有好幾件，其中一件跟這次直接相關',5]]},
+ {id:'m5',dim:'M',type:'choice',text:'這個想法放在心裡多久了？這段時間你做了什麼？',options:[['想了很久，但還沒真的行動',1],['最近才想到',2],['已經做了一些小測試',4],['已經在兼職經營，有初步成果',5]]},
+ // P
+ {id:'pl1',dim:'P',g:'like',type:'likert',text:'我常在別人還沒要求前，就先動手處理問題。'},
+ {id:'pl2',dim:'P',g:'like',type:'likert',text:'沒人盯，我也能維持每天的工作節奏。'},
+ {id:'pl3',dim:'P',g:'like',type:'likert',rev:1,text:'規則不清楚時，我會焦慮到難以做決定。'},
+ {id:'pl4',dim:'P',g:'like',type:'likert',text:'被拒絕或批評後，我通常一兩天內就能重新出發。'},
+ {id:'pl5',dim:'P',g:'like',type:'likert',rev:1,text:'壓力大時，我會失眠或情緒低落好一陣子。'},
+ {id:'pl6',dim:'P',g:'like',type:'likert',rev:1,text:'我寧可領穩定薪水，也不要收入忽高忽低。'},
+ {id:'pl7',dim:'P',g:'like',type:'likert',text:'我可以開口向陌生人推銷，或請他幫忙。'},
+ {id:'pl8',dim:'P',g:'like',type:'likert',text:'同一件事做半年沒有起色，我仍能維持投入。'},
+ {id:'ps1',dim:'P',g:'sit',type:'choice',text:'想一次你最大的失敗。之後那一週，你做了什麼？',options:[['到現在都還在影響我',1],['低潮了一陣子才慢慢恢復',2.5],['檢討原因後，很快調整做法',4],['當週就有具體修正行動，後來也做出結果',5]]},
+ {id:'ps2',dim:'P',g:'sit',type:'choice',text:'假設存款只剩三個月，收入一直沒起色。你會怎麼做？',options:[['再撐撐看，應該會好轉',1],['先借錢撐過去',1.5],['砍成本、找兼差收入，同時調整做法',4],['照事先設好的停損點，決定轉向或收掉',5]]},
+ {id:'ps3',dim:'P',g:'sit',type:'choice',text:'沒有老闆的時候，你怎麼安排一天、確保進度？',options:[['大多看當天心情',1],['心裡大概有個方向',2.5],['每天列待辦清單',3.5],['有固定節奏，每週檢討一次進度',5]]},
+ // A
+ {id:'a_sell',dim:'A',g:'skill',type:'skill',text:'銷售：開發客戶、提案、成交、收款',hint:'問自己：親手成交過最大的一筆是多少？'},
+ {id:'a_fin',dim:'A',g:'skill',type:'skill',text:'財務：損益、現金流、定價、報稅'},
+ {id:'a_prod',dim:'A',g:'skill',type:'skill',text:a=>isCreator(a)?'內容製作與交付：企劃、拍攝剪輯、產出穩定的作品':'產品／交付：把東西做出來，或把服務交付好'},
+ {id:'a_mkt',dim:'A',g:'skill',type:'skill',text:'行銷：定位、內容、廣告、社群'},
+ {id:'a_ops',dim:'A',g:'skill',type:'skill',text:'營運：流程、排程、客服、品管'},
+ {id:'a_ai',dim:'A',g:'skill',type:'skill',text:'用 AI 提升效率：把重複工作交給 AI 或自動化'},
+ {id:'a_m1',dim:'A',g:'mind',type:'choice',text:a=>isCreator(a)?'你知道自己要靠什麼變現嗎？每月要多少收入才打平？':'你的產品毛利多少？每月要賣多少才能損益兩平？',options:[['還沒算過',1],['大概知道',2.5],['算過，但還沒被實際數字驗證',3.5],['算過，而且有實際收入數字支撐',5]]},
+ {id:'a_m2',dim:'A',g:'mind',type:'choice',text:'你曾經用很少的錢做成一件事，或說服別人低價、無償幫你嗎？',options:[['沒有',1],['有過一次',3],['常常這樣做',5]]},
+ // R
+ {id:'r_exp',dim:'R',type:'number',text:'你（或家庭）每月必要支出大約多少？',hint:'房租或房貸、生活費、保險、孝親、還款。單位：萬元（新台幣）',unit:'萬元／月',ph:'例如 4.5'},
+ {id:'r_save',dim:'R',g:'fin',type:'number',text:'不投入事業、專門留著生活用的預備金有多少？',hint:'單位：萬元',unit:'萬元',ph:'例如 30',
+  react:(x,a)=>{const m=runway(a);return `你的跑道大約是 ${m.toFixed(1)} 個月。`+(m<3?'這低於 3 個月，是需要優先處理的風險。':m<6?'偏短，只適合低成本、能快速收現的模式。':m<12?'及格，記得搭配明確的停損點。':'足夠完成一輪驗證與修正。')}},
+ {id:'r_cap',dim:'R',g:'fin',type:'choice',text:'可以投入、而且全部輸掉也不影響生活的錢，夠支付啟動成本嗎？',options:[['遠遠不夠，大部分要靠借貸',1],['大約只夠一半',2.5],['大致足夠',4],['完全足夠，還有餘裕',5]]},
+ {id:'r_debt',dim:'R',g:'fin',type:'choice',text:'目前有沒有高利借貸、逾期或被催收的債務？',options:[['有',1],['有貸款，但都正常還款中',3.5],['沒有',5]]},
+ {id:'r_cust',dim:'R',g:'net',type:'choice',text:'現在馬上，你能寫出幾位「可能第一批付錢」的客戶或粉絲？',options:[['0–2 位',1],['3–5 位',2.5],['6–9 位',4],['10 位以上，而且都聊過',5]]},
+ {id:'r_mentor',dim:'R',g:'net',type:'choice',text:'在這個領域裡，有可以打電話請教的前輩或業師嗎？',options:[['沒有',1],['1–2 位',3],['3 位以上',5]]},
+ {id:'r_time',dim:'R',g:'time',type:'choice',text:'每週能穩定投入多少時間？',options:[['少於 10 小時，也還沒規劃',1],['每週 10–20 小時兼職',2.5],['兼職，但有明確的轉全職條件',4],['全職投入',5]]},
+ {id:'r_asset',dim:'R',g:'time',type:'choice',text:'你有別人難以複製的專業、作品、證照、設備或受眾嗎？',options:[['沒有',1],['有一些',3],['有，而且直接用得上',5]]},
+ // V
+ {id:'v_ev',dim:'V',g:'ev',type:'choice',text:'目前為止，你的點子有哪一級證據？選最高的那一級。',options:[['只有想法，還沒跟目標客戶或受眾談過',1],['親友說不錯，或問卷說「會考慮買」',1.5],['深度訪談過 20 位以上目標對象，問題確實存在',2.5],['有人付訂金、預購或報名',3.5],['有陌生人付費購買，也有交付紀錄',4.5],['有回購、轉介紹，或連續數月穩定收入',5]],
+  react:x=>x.v<=1?'記一下：未來式的「會買」不算證據，付出去的錢才算。':null},
+ {id:'v1',dim:'V',g:'q',type:'choice',text:'你能在 15 秒內說清楚「幫誰解決什麼問題」嗎？',options:[['對象大概是所有人',1],['大致說得出來',2.5],['對象和痛點都很具體',5]]},
+ {id:'v2',dim:'V',g:'q',type:'choice',text:'你的目標對象現在怎麼解決這個問題？花多少錢或時間？',options:[['不知道',1],['大概知道',3],['很清楚，而且有訪談佐證',5]]},
+ {id:'v3',dim:'V',g:'q',type:'choice',text:'競爭對手、同類型創作者或替代品是誰？你贏在哪？',options:[['目前沒有競爭者',1],['知道幾個，但說不出差異',2.5],['清楚對手是誰，差異很具體',5]]},
+ {id:'v4',dim:'V',g:'q',type:'choice',text:'一個客戶或粉絲會怎麼找到你？',options:[['靠口碑，或之後再投廣告',1],['有管道的想法，還沒試',2.5],['有管道，也有初步數據',5]]},
+ {id:'v5',dim:'V',g:'q',type:'choice',text:'這個點子最可能錯在哪？',options:[['應該沒什麼風險',1],['想過一些',3],['說得出關鍵假設，也知道最便宜的測試方法',5]]},
+ // T
+ {id:'t_mode',dim:'T',type:'choice',text:'你打算一個人做，還是跟夥伴合夥？',options:[['一個人做',null],['跟夥伴合夥',null]]},
+ {id:'t1',dim:'T',when:partner,type:'choice',text:'你們認識多久？一起完成過什麼事？',options:[['認識不到半年，沒一起做過事',1],['認識一陣子，合作過小事',3],['共事多年，一起扛過壓力',5]]},
+ {id:'t2',dim:'T',when:partner,type:'choice',text:'股權或分潤怎麼分？有人中途離開時怎麼處理？',options:[['還沒談，或直接平分、沒談退出',1],['有口頭共識',2.5],['有書面協議，含分期兌現與退出條款',5]],
+  react:x=>x.v===0?'這一點要先處理。股權沒談清楚，是合夥最常見的引爆點。':null},
+ {id:'t3',dim:'T',when:partner,type:'choice',text:'誰負責什麼？最後拍板的人是誰？',options:[['大家一起決定',1],['大概有分工',3],['分工明確，決策權也清楚',5]]},
+ {id:'t4',dim:'T',when:partner,type:'choice',text:'你們的能力是重疊還是互補？',options:[['兩人都是同一種專長',1],['部分互補',3],['銷售、產品、營運各有人負責',5]]},
+ {id:'s1',dim:'T',when:solo,type:'choice',text:'你最弱的兩項技能，打算由誰來補？',options:[['我打算自己全部學起來',1],['還在找',2.5],['已經找好外包、顧問、AI 工具或兼職夥伴',5]]},
+ {id:'s2',dim:'T',when:solo,type:'choice',text:'遇到重大決策，你會找誰討論？',options:[['沒有人',1],['偶爾問朋友',3],['有固定的導師、同業或顧問',5]]},
+ // L
+ {id:'l_plan',dim:'L',type:'choice',text:'你打算怎麼開始？',options:[['辭職全職投入，並投入大部分積蓄',null],['全職投入，但保留生活預備金',null],['先以兼職或副業開始',null],['已經在經營中',null]]},
+ {id:'l1',dim:'L',type:'choice',text:'你在家裡的經濟角色是？',options:[['唯一收入來源，還要扶養家人',1],['主要收入來源',2.5],['有另一半的收入，或沒有扶養壓力',5]]},
+ {id:'l2',dim:'L',type:'choice',text:'伴侶和家人知道你的計畫嗎？態度如何？',options:[['還沒說，或明確反對',1],['知道，但有疑慮',3],['開過家庭會議，有共識也談好底線',5]]},
+ {id:'l3',dim:'L',type:'choice',text:'你給自己設的停損點是什麼？',options:[['做到成功為止',1],['大概有個想法',3],['時間、金額、指標三項都很明確',5]]},
+ {id:'l4',dim:'L',type:'choice',text:'最近半年的睡眠、健康、精神狀態如何？',options:[['長期透支，或正處在低潮',1],['普通，偶爾很累',3],['穩定，有固定運動或紓壓方式',5]]},
+ // C
+ {id:'c1',dim:'C',type:'choice',text:'上一次你聽了別人的建議而改變做法，是什麼時候？',options:[['想不起來',1],['有，但不多',3],['有具體例子，而且改了之後變好',5]]},
+ {id:'c2',dim:'C',type:'choice',text:'如果驗證結果顯示點子不成立，你會怎麼做？',options:[['我還是會做',1],['會很掙扎',3],['調整做法，或換一個題目',5]]},
+ {id:'c3',dim:'C',type:'choice',text:'過去一年，你主動學了什麼？',options:[['沒有特別學',1],['零星看一些',3],['有系統地學，而且用上了',5]]},
+ {id:'c_test',dim:'C',type:'choice',text:()=>{const w=weakest();return `我直接說：從你目前的回答看，最弱的一環是「${w?w.n:'資源盤點'}」。聽到這句話，你的第一反應比較接近哪個？`},
+  options:[['不太同意，你不了解我的狀況',1],['有點不舒服，但想知道為什麼',4],['合理，具體是哪幾題拉低的？',5]]}
+];
+
+/* ===================== 路線 B：企業主／企業主管 ===================== */
+const B_DIMS=[
+ {k:'E',n:'AI 認知與心態',s:'心態',w:20,intro:'先聊聊你自己對 AI 的感受。主管的心態，通常決定了團隊敢不敢開始。'},
+ {k:'K',n:'痛點清晰度',s:'痛點',w:20,intro:'接下來找出公司最痛的地方。AI 導入最常見的失敗，是先買工具、後找問題。'},
+ {k:'D',n:'流程與資料基礎',s:'流程',w:20,intro:'AI 只能放大你已經有的流程和資料。這段看地基穩不穩。'},
+ {k:'H',n:'團隊準備度',s:'團隊',w:20,intro:'工具再好，沒人用也是零。這段看你的團隊準備好了沒。'},
+ {k:'G',n:'導入條件',s:'條件',w:20,intro:'最後確認決策、預算、規範和時程。'}
+];
+const PAINS=[
+ ['growth','業績成長停滯','用 AI 分析成交與客戶資料，找出最值得加碼的客群和管道','整理近 6 個月的成交名單，標出每筆的來源管道'],
+ ['ads','廣告成本變高、效果變差','用 AI 量產素材做 A/B 測試，建立廣告數據檢核表','把近 3 個月的廣告數據集中到同一張表'],
+ ['staff','人力不足或流動率高','把資深同仁的做法整理成 SOP 與內部 AI 助理，縮短新人上手時間','寫下新人最常問的 20 個問題與標準答案'],
+ ['admin','重複性行政工作太多','報表、會議記錄、常見客服問答交給 AI 與自動化流程','記錄一週內最花時間的 5 件重複工作，以及各花幾小時'],
+ ['content','行銷內容產不出來','建立內容系統：一份素材由 AI 協助改寫成多平台版本','列出客戶最常問的 10 個問題，當作內容題庫'],
+ ['data','資料散亂、難做決策','把資料集中到單一資料庫，讓 AI 每週自動產出營運摘要','盤點資料目前散在哪幾個地方、誰在維護'],
+ ['resist','員工不會用或抗拒 AI','從「幫員工省事」的小場景切入，用內部工作坊建立信心','找 2–3 位對 AI 有興趣的同仁當種子'],
+ ['where','不知道 AI 該從哪裡開始','做一次 AI 機會盤點，挑一個兩週內看得到成效的試點','列出 3 個最痛、最重複的流程'],
+ ['compete','同業用 AI 跑得比我們快','對標同業做法，先補上差距最大的一兩個流程','記下三家同業最近用 AI 做的事']
+];
+const B_Q=[
+ {id:'name',pre:1,type:'text',text:'怎麼稱呼你？',ph:'例如：王經理'},
+ {id:'role',pre:1,type:'choice',text:'你在公司的角色是？',options:[['老闆／負責人',null],['高階主管',null],['中階主管',null]]},
+ {id:'size',pre:1,type:'choice',text:'公司規模大約多少人？',options:[['1–9 人',null],['10–49 人',null],['50–199 人',null],['200 人以上',null]]},
+ {id:'ind',pre:1,type:'choice',text:'主要產業是？',options:[['零售／電商',null],['餐飲／生活服務',null],['製造／貿易',null],['專業服務／顧問',null],['教育／培訓',null],['其他',null]]},
+ // E
+ {id:'e1',dim:'E',type:'choice',text:'想到 AI，你最常出現哪一種感覺？',options:[['怕公司被同業甩開，很焦慮',1,1],['資訊太多，不知道該信誰',2,.8],['知道很重要，但一直排不進行程',3,.55],['已經在推，但不確定方向對不對',4,.3],['很踏實，AI 已經在幫公司做事',5,.05]],
+  react:x=>x.v<=1?'這是很多經營者現在的狀態。好消息是，企業導入 AI 不需要一次到位，挑對一個流程先做出成果，焦慮就會轉成方向。':null,calm:1},
+ {id:'e2',dim:'E',type:'choice',text:'你自己用 AI 的程度？',options:[['幾乎沒用過',1,.8],['偶爾問問題',2.5,.5],['每週會用來處理工作',4,.25],['每天都用，也會教別人',5,.1]]},
+ {id:'e3',dim:'E',type:'choice',text:'你能說出 AI 在你們產業最可能先改變的一兩件事嗎？',options:[['說不太出來',1,.7],['有些模糊的想法',2.5,.45],['很清楚，也想好公司要怎麼因應',5,.1]]},
+ {id:'e4',dim:'E',type:'choice',text:'AI 相關的決定，你們現在最卡在哪裡？',options:[['不知道該問誰、該信誰',2,.8],['怕花了錢沒效果',2.5,.6],['怕客戶或公司資料外洩',2.5,.5],['怕員工反彈或用不起來',2.5,.5],['沒有卡，已經在推進',5,.1]]},
+ // K
+ {id:'k1',dim:'K',type:'multi',max:3,text:'公司現在最頭痛的是哪些？最多選 3 項。',options:PAINS.map(p=>[p[1]])},
+ {id:'k2',dim:'K',type:'choice',text:'你能用數字描述這些問題嗎？例如每月少了多少營收、多花多少工時。',options:[['說不出來',1],['大概說得出來',3],['有具體數字',5]]},
+ {id:'k3',dim:'K',type:'choice',text:'團隊每週大約花多少小時在重複性工作上？例如整理報表、回覆相同問題、複製貼上。',options:[['不清楚',1],['10 小時以內',4],['10–30 小時',4],['30–60 小時',4],['60 小時以上',4]]},
+ {id:'k4',dim:'K',type:'choice',text:'如果只能先解決一個問題，你清楚是哪一個嗎？',options:[['說不出來',1],['有幾個在打架，還沒決定',2.5],['非常清楚',5]]},
+ // D
+ {id:'d1',dim:'D',type:'choice',text:'公司主要流程有寫成 SOP 嗎？',options:[['都在人的腦袋裡',1],['少數有',2.5],['大部分有，但很少更新',3.5],['有，而且持續更新',5]]},
+ {id:'d2',dim:'D',type:'choice',text:'客戶、訂單、營運資料主要放在哪裡？',options:[['散在 LINE、紙本和個人電腦',1],['各自維護的 Excel',2.5],['有共用系統，但各部門各自為政',3.5],['集中在單一系統',5]]},
+ {id:'d3',dim:'D',type:'choice',text:'團隊現在怎麼協作？',options:[['主要靠 LINE 群組',1.5],['雲端文件共用',3],['有專案管理或 CRM 系統',4],['工具之間已經有串接自動化',5]]},
+ // H
+ {id:'h1',dim:'H',type:'choice',text:'員工對 AI 的整體態度？',options:[['抗拒，或擔心被取代',1],['觀望',2.5],['少數人自己在用',3.5],['多數人主動在用',5]]},
+ {id:'h2',dim:'H',type:'choice',text:'公司裡有人可以擔任 AI 推動者嗎？',options:[['沒有',1],['有人有興趣，但沒時間',2.5],['有，而且被授權推動',5]]},
+ {id:'h3',dim:'H',type:'choice',text:'過去一年，公司辦過 AI 相關的教育訓練嗎？',options:[['沒有',1],['員工自己找資料看',2.5],['辦過一兩次',3.5],['有持續的學習機制',5]]},
+ // G
+ {id:'g1',dim:'G',type:'choice',text:'在 AI 導入這件事上，你的決策權是？',options:[['需要說服老闆',2],['需要跟其他主管取得共識',3],['可以直接決定',5]]},
+ {id:'g2',dim:'G',type:'choice',text:'未來 6 個月，可以投入 AI 導入的預算大約是？',options:[['還沒有預算',1],['新台幣 10 萬以內',3],['10–50 萬',4],['50 萬以上',5]]},
+ {id:'g3',dim:'G',type:'choice',text:'公司有 AI 使用規範嗎？例如哪些資料可以交給 AI 處理。',options:[['沒有',1],['口頭提醒過',2.5],['有書面規範',5]]},
+ {id:'g4',dim:'G',type:'choice',text:'你希望多久看到第一個成果？',options:[['還沒想過',1.5],['一年內',3],['三到六個月內，而且有明確目標',5]]}
+];
+
+const PATHS={
+ a:{label:'想創業／做自媒體',dims:A_DIMS,qs:A_Q},
+ b:{label:'企業主／企業主管',dims:B_DIMS,qs:B_Q}
+};
+
+/* ===================== 狀態與計分 ===================== */
+let S={path:null,ans:{}};
+const KEY='ai-start-v2';
+try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);if(o&&o.ans)S=o}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const P=()=>PATHS[S.path];
+const DIMOF=k=>P().dims.find(d=>d.k===k);
+const applicable=q=>!q.when||q.when(S.ans);
+const txt=q=>typeof q.text==='function'?q.text(S.ans):q.text;
+function runway(a){const e=+((a.r_exp||{}).v),s=+((a.r_save||{}).v);if(!(e>0))return 0;return s/e}
+function runwayScore(m){return m<3?1:m<6?2:m<12?3:m<18?4:5}
+function score(q,a){if(!a)return null;
+ if(q.type==='choice')return q.options[a.v][1];
+ if(q.type==='likert')return q.rev?6-a.v:a.v;
+ if(q.type==='skill')return 1+a.v*4/3;
+ if(q.id==='r_save')return runwayScore(runway(S.ans));
+ return null}
+const sc=id=>{const q=P().qs.find(x=>x.id===id);return q&&applicable(q)?score(q,S.ans[id]):null};
+const avg=xs=>{xs=xs.filter(x=>x!=null);return xs.length?xs.reduce((s,x)=>s+x,0)/xs.length:null};
+function dimAvg(d){const qs=P().qs.filter(q=>q.dim===d.k&&applicable(q));
+ if(!d.g)return avg(qs.map(q=>score(q,S.ans[q.id])));
+ let t=0,w=0;for(const[g,gw]of Object.entries(d.g)){const v=avg(qs.filter(q=>q.g===g).map(q=>score(q,S.ans[q.id])));if(v!=null){t+=v*gw;w+=gw}}
+ return w?t/w:null}
+function compute(){return P().dims.map(d=>{const a=dimAvg(d);const pct=a==null?0:(a-1)/4;return{...d,avg:a,pct,pts:pct*d.w}})}
+function weakest(){const r=compute().filter(d=>d.k!=='C'&&d.avg!=null);r.sort((x,y)=>x.pct-y.pct);return r[0]}
+function anxiety(){const v=P().qs.filter(q=>q.type==='choice'&&S.ans[q.id]&&q.options[S.ans[q.id].v][2]!=null).map(q=>q.options[S.ans[q.id].v][2]);return v.length?Math.round(avg(v)*100):null}
+const live=()=>P().qs.filter(applicable);
+const nextQ=()=>live().find(q=>!S.ans[q.id]);
+
+/* ===================== DOM 工具 ===================== */
+const $=id=>document.getElementById(id);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
+const thread=$('thread'),dock=$('dock'),dockIn=$('dock-in');
+let lastWasBot=false,busy=false;
+
+function view(v){$('home').hidden=v!=='home';$('talk').hidden=v!=='talk';$('report').hidden=v!=='report';
+ dock.hidden=v!=='talk';$('prog').hidden=v!=='talk';$('restart').hidden=v==='home';
+ $('sub').textContent=v==='home'?'李煜｜行銷・創業人':P()?P().label:'';padBottom()}
+function padBottom(){}
+const toBottom=(smooth)=>requestAnimationFrame(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:smooth&&!RM?'smooth':'auto'}));
+
+function botMsg(html,cls,anim){const row=el('div','row'+(lastWasBot?' cont':'')+(anim?' pop':''));
+ row.append(el('div','ava','煜'),el('div','bub'+(cls?' '+cls:''),html));row.firstChild.setAttribute('aria-hidden','true');thread.append(row);lastWasBot=true;return row}
+function meMsg(t,anim){thread.append(el('div','me'+(anim?' pop':''),esc(t)));lastWasBot=false}
+function chap(d,anim){thread.append(el('div','chap'+(anim?' pop':''),`<div><em><span class="pill">第 ${P().dims.indexOf(d)+1} 段・${d.w} 分</span></em><b>${d.n}</b></div><span class="chev" aria-hidden="true">${ICON.chev}</span>`));lastWasBot=false}
+async function typing(){const r=botMsg('<span class="typing" aria-label="輸入中"><i></i><i></i><i></i></span>','',true);toBottom(true);await wait(420);r.remove();lastWasBot=thread.lastElementChild&&thread.lastElementChild.classList.contains('row')}
+function qHtml(q){const n=q.dim?`<span class="qid">${q.dim}${P().qs.filter(x=>x.dim===q.dim&&applicable(x)).indexOf(q)+1}</span>`:'';
+ const lead=q.type==='likert'?'這句話像你嗎？':q.type==='skill'?'你在這一項的程度？':'';
+ return (lead?`<div class="hint" style="margin:0 0 2px">${n}${lead}</div><div class="q">${esc(txt(q))}</div>`:`<div class="q">${n}${esc(txt(q))}</div>`)+(q.hint?`<span class="hint">${esc(q.hint)}</span>`:'')}
+
+/* ===================== 首頁 ===================== */
+const ICON={
+ chev:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.5 6 8.5 10 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ down:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v11M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ arrow:'<svg class="arrow" viewBox="0 0 100 100" aria-hidden="true"><path d="M14 14 L80 80 M80 30 L80 80 L30 80" fill="none" stroke="currentColor" stroke-width="15" stroke-linecap="square"/></svg>',
+ person:'<svg class="ico" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="14" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 28c2-4.5 5.5-6.5 9.5-6.5s7.5 2 9.5 6.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+ biz:'<svg class="ico" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="10" y="14" width="16" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14.5 14v-2.5a1.5 1.5 0 0 1 1.5-1.5h4a1.5 1.5 0 0 1 1.5 1.5V14M10 19h16" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>'
+};
+function home(){view('home');const h=$('home');
+ const saved=S.path&&Object.keys(S.ans).length?live().filter(q=>S.ans[q.id]).length:0;
+ h.innerHTML=`
+ <div class="poster">
+  <div class="poster-l">${ICON.arrow}<div class="tags"><span>#AI焦慮</span><span>#想創業</span><span>#做自媒體</span><span>#企業導入AI</span><span>#90天行動</span></div></div>
+  <div class="block" role="img" aria-label="AI 別慌，2026 起步診斷"><span class="b-ai">AI</span><span class="b-zh">別慌</span><span class="b-yr">2026</span><span class="b-tag">起步診斷</span></div>
+ </div>
+ <div class="headline"><h1>AI 來得很快，<em>你不用一個人慌。</em></h1><a class="round" href="#pick" aria-label="往下選身份">${ICON.down}</a></div>
+ ${saved?`<div class="resume"><p>你上次做到一半：<b>${P().label}</b>，已回答 ${saved} / ${live().length} 題。</p><button class="btn o" id="resume" type="button">繼續作答</button></div>`:''}
+ <div class="duo">
+  <div class="hello"><div><small>Hello,</small><b>我是李煜</b><span class="role">行銷・創業人</span></div><ul><li><span>用最小資金，把平台做到年營收千萬</span></li><li><span>替 NPO 組織重新設計募款架構，募款金額從 10 萬提升到 500 萬</span></li><li><span>代理多個傳統品牌轉型電商，做到千萬營收</span></li></ul><p class="solo">以上這些，都是我一個人加上無數個 AI 完成的。</p></div>
+  <div class="panel"><div class="panel-h"><h2>為什麼做這份診斷</h2><span class="chev" aria-hidden="true">${ICON.chev}</span></div>
+   <blockquote class="quote"><p>社群上很多內容都在販賣 AI 焦慮，但我很反對這件事。AI 真的沒有那麼難。</p><p>我想陪你一起走過 AI 焦慮，跟 AI 一起學習、一起成長，解決你真正的問題。</p><p>有了 AI，你可以省下很多時間，去探索你的人生。</p><cite>李煜</cite></blockquote>
+   <p class="fine">像聊天一樣作答，答案只存在你這台裝置。</p></div>
+ </div>
+ <div id="pick"><div class="sech"><h2>先選你的身份</h2><span class="chev" aria-hidden="true">${ICON.chev}</span></div>
+ <div class="paths">
+  <button class="path ink" data-p="a" type="button">${ICON.person}<span class="pill">個人路線</span><b>想創業<br>或做自媒體</b>
+   <p>看你適不適合出發、優勢在哪、還缺什麼，以及怎麼讓 AI 變成你的槓桿。</p><div class="rule"></div>
+   <div class="foot"><span>約 50 題・12 分鐘</span><span>開始 →</span></div></button>
+  <button class="path org" data-p="b" type="button">${ICON.biz}<span class="pill">企業路線</span><b>企業主<br>或企業主管</b>
+   <p>找出公司最痛的地方，判斷 AI 該從哪裡切入、團隊準備好了沒。</p><div class="rule"></div>
+   <div class="foot"><span>約 22 題・6 分鐘</span><span>開始 →</span></div></button>
+ </div></div>
+ <div><div class="sech"><h2>做完你會拿到</h2><span class="chev" aria-hidden="true">${ICON.chev}</span></div>
+ <div class="gets">
+  <div class="get"><span class="pill o" style="justify-self:start">指數</span><b>AI 焦慮指數</b><span>知道焦慮從哪來，拿到三個馬上能做的緩解步驟</span></div>
+  <div class="get"><span class="pill" style="justify-self:start">報告</span><b>完整診斷報告</b><span>分數、優勢、缺口和 90 天行動，一次看清楚</span></div>
+  <div class="get"><span class="pill line" style="justify-self:start">預約</span><b>一對一諮詢</b><span>做完可以直接預約，跟我聊你的結果</span></div>
+ </div></div>
+ <p class="fine">分數依你的自評計算，是一對一諮詢的起點，不是最終判定。</p>`;
+ h.querySelectorAll('.path').forEach(b=>b.onclick=()=>{S={path:b.dataset.p,ans:{}};save();startTalk(true)});
+ h.querySelector('.headline .round').onclick=e=>{e.preventDefault();$('pick').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'})};
+ const r=$('resume');if(r)r.onclick=()=>startTalk(false);
+ window.scrollTo({top:0})}
+
+/* ===================== 對話 ===================== */
+function rebuild(){thread.innerHTML='';lastWasBot=false;
+ botMsg(S.path==='a'?'好，我們從 AI 開始聊，再一路看到動機、能力、資源和生活。照「實際做過的」回答就好，沒有標準答案。':'好，我陪你找出公司最痛的地方，以及 AI 適合從哪裡切入。照公司現況回答就好。');
+ let last=null,pre=false;
+ for(const q of live()){const a=S.ans[q.id];
+  if(q.pre&&!pre){pre=true;thread.append(el('div','chap',`<div><em><span class="pill o">開始之前</span></em><b>先認識你</b></div><span class="chev" aria-hidden="true">${ICON.chev}</span>`));lastWasBot=false}
+  if(q.dim&&q.dim!==last){last=q.dim;const d=DIMOF(q.dim);chap(d);botMsg(esc(d.intro),'note')}
+  botMsg(qHtml(q));
+  if(!a)return q;
+  meMsg(a.label);if(q.react){const r=q.react(a,S.ans);if(r)botMsg(esc(r),q.calm?'calm':'note')}
+ }
+ return null}
+function markPast(){thread.querySelectorAll('.row,.me').forEach(n=>n.classList.add('past'));const l=thread.lastElementChild;if(l)l.classList.remove('past')}
+function progress(q){const all=live(),done=all.filter(x=>S.ans[x.id]).length;
+ const d=q&&q.dim?DIMOF(q.dim):null;const di=d?P().dims.indexOf(d):-1;
+ $('prog-sec').innerHTML=d?`<b>${d.n}</b>・第 ${di+1} / ${P().dims.length} 段`:q?'<b>先認識你</b>':'<b>全部完成</b>';
+ $('prog-num').textContent=`${done} / ${all.length}`;
+ const dots=$('prog-dots');dots.innerHTML='';P().dims.forEach((x,i)=>{const qs=all.filter(y=>y.dim===x.k);const ok=qs.length&&qs.every(y=>S.ans[y.id]);dots.append(el('i',ok?'done':i===di?'on':''))})}
+function startTalk(fresh){view('talk');const q=rebuild();markPast();progress(q);
+ if(q)showDock(q);else finishDock();toBottom(false);if(!fresh)return}
+async function answer(q,v,label){if(busy)return;busy=true;
+ S.ans[q.id]={v,label};save();dockIn.innerHTML='';
+ meMsg(label,true);toBottom(true);
+ if(q.react){const r=q.react(S.ans[q.id],S.ans);if(r){await typing();botMsg(esc(r),q.calm?'calm':'note',true);toBottom(true);await wait(350)}}
+ const n=nextQ();
+ if(!n){await typing();botMsg(S.path==='a'?'全部完成。謝謝你這麼誠實。我把結果整理成報告了。':'全部完成。我把公司的痛點和導入建議整理成報告了。','',true);progress(null);toBottom(true);await wait(700);busy=false;report();return}
+ if(n.dim&&n.dim!==q.dim){const d=DIMOF(n.dim);await wait(150);chap(d,true);await typing();botMsg(esc(d.intro),'note',true)}
+ else if(n.dim&&q.pre){const d=DIMOF(n.dim);chap(d,true);await typing();botMsg(esc(d.intro),'note',true)}
+ await typing();botMsg(qHtml(n),'',true);markPast();progress(n);showDock(n);toBottom(true);busy=false}
+function undo(){const ids=live().filter(q=>S.ans[q.id]).map(q=>q.id);if(!ids.length){S={path:null,ans:{}};save();home();return}
+ delete S.ans[ids[ids.length-1]];save();startTalk(false)}
+let keyMap=null;
+document.addEventListener('keydown',e=>{if(!keyMap||dock.hidden||e.target.closest('input,textarea')||e.metaKey||e.ctrlKey||e.altKey)return;const f=keyMap[e.key];if(f){e.preventDefault();f()}});
+function foot(extra){const f=el('div','dock-foot');const b=el('button','','← 改上一題');b.type='button';b.onclick=undo;f.append(b,el('span','kbd-hint',extra||'可用數字鍵作答'));return f}
+function showDock(q){dockIn.innerHTML='';keyMap={};const body=el('div','dock-body');
+ if(q.type==='choice'||q.type==='skill'){const opts=q.type==='skill'?SKILL.map(s=>[s]):q.options;
+  opts.forEach((o,i)=>{const b=el('button','opt',`<kbd>${i+1}</kbd><span>${esc(o[0])}</span>`);b.type='button';const go=()=>answer(q,i,o[0]);b.onclick=go;keyMap[String(i+1)]=go;body.append(b)})}
+ else if(q.type==='multi'){const picked=new Set();const ok=el('button','btn','請至少選 1 項');ok.type='button';ok.disabled=true;
+  const upd=()=>{ok.disabled=!picked.size;ok.textContent=picked.size?`確定，已選 ${picked.size} 項`:`請選 1–${q.max} 項`};upd();
+  q.options.forEach((o,i)=>{const b=el('button','opt',`<kbd>${i+1}</kbd><span>${esc(o[0])}</span>`);b.type='button';b.setAttribute('aria-pressed','false');
+   const tog=()=>{if(picked.has(i))picked.delete(i);else if(picked.size<q.max)picked.add(i);else return;b.setAttribute('aria-pressed',picked.has(i)?'true':'false');upd()};
+   b.onclick=tog;keyMap[String(i+1)]=tog;body.append(b)});
+  const go=()=>{if(!picked.size)return;const v=[...picked].sort((a,b)=>a-b);answer(q,v,v.map(i=>q.options[i][0]).join('、'))};ok.onclick=go;keyMap.Enter=go;
+  dockIn.append(body,ok,foot('數字鍵勾選，Enter 確定'));return}
+ else if(q.type==='likert'){const r=el('div','lk');const lab=i=>`${i} 分・${i<=2?'不太像我':i===3?'一半一半':'像我'}`;
+  for(let i=1;i<=5;i++){const b=el('button','',String(i));b.type='button';b.setAttribute('aria-label',lab(i));const go=()=>answer(q,i,lab(i));b.onclick=go;keyMap[String(i)]=go;r.append(b)}
+  body.append(r,el('div','lk-ends','<span>1 完全不像我</span><span>5 完全像我</span>'))}
+ else{keyMap=null;const f=el('form','field');const inp=el('input');inp.id='in-'+S.path+'-'+q.id;inp.placeholder=q.ph||'';
+  inp.setAttribute('aria-label',q.type==='number'?q.unit:'你的稱呼');if(q.type==='number'){inp.inputMode='decimal'}else{inp.autocomplete='nickname'}
+  const go=el('button','btn',q.type==='text'?'開始':'送出');go.type='submit';const er=el('div','err');
+  f.append(inp,go);f.onsubmit=e=>{e.preventDefault();inp.blur();const v=inp.value.trim();
+   if(q.type==='text'){answer(q,v||'你',v||'（略過）');return}
+   const n=parseFloat(v);if(!(n>=0)||(q.id==='r_exp'&&n<=0)){er.textContent='請輸入大於 0 的數字，單位是萬元。';return}
+   answer(q,n,`${n} ${q.unit}`)};
+  body.append(f,er);dockIn.append(body,foot(' '));return}
+ dockIn.append(body,foot())}
+function finishDock(){dockIn.innerHTML='';keyMap=null;const b=el('button','btn','看我的報告');b.type='button';b.style.width='100%';b.onclick=report;dockIn.append(b,foot(' '))}
+
+/* ===================== 報告共用 ===================== */
+function radar(r){const C=170,R=104,n=r.length;const pt=(i,v)=>{const a=-Math.PI/2+i*2*Math.PI/n;return[C+Math.cos(a)*R*v,C+Math.sin(a)*R*v]};
+ let s=`<svg viewBox="0 0 340 340" role="img" aria-label="各面向得分雷達圖">`;
+ [.25,.5,.75,1].forEach(k=>{s+=`<polygon points="${r.map((_,i)=>pt(i,k).join(',')).join(' ')}" fill="none" stroke="var(--line)" stroke-width="1"/>`});
+ r.forEach((_,i)=>{const[x,y]=pt(i,1);s+=`<line x1="${C}" y1="${C}" x2="${x}" y2="${y}" stroke="var(--line)"/>`});
+ s+=`<polygon points="${r.map((d,i)=>pt(i,Math.max(d.pct,.02)).join(',')).join(' ')}" fill="var(--accent)" fill-opacity=".16" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`;
+ r.forEach((d,i)=>{const[x,y]=pt(i,Math.max(d.pct,.02));s+=`<circle cx="${x}" cy="${y}" r="4" fill="${d.pct<.4?'var(--bad)':'var(--accent)'}" stroke="var(--surface)" stroke-width="1.5"/>`;
+  const[lx,ly]=pt(i,1.24);const anc=Math.abs(lx-C)<8?'middle':lx>C?'start':'end';
+  s+=`<text x="${lx}" y="${ly}" text-anchor="${anc}" font-size="12.5" fill="var(--ink)" font-family="var(--f-body)">${d.s}</text><text x="${lx}" y="${ly+14}" text-anchor="${anc}" font-size="10.5" fill="var(--muted)" font-family="var(--f-mono)">${Math.round(d.pct*100)}%</text>`});
+ return s+'</svg>'}
+function dimBars(r){return `<div class="dims">${r.map(d=>`<div class="dim${d.pct<.4?' low':''}"><span>${d.n}</span><div class="bar"><b style="width:${Math.max(d.pct*100,2)}%"></b></div><span class="n">${d.pts.toFixed(1)} / ${d.w}</span></div>`).join('')}</div>`}
+const ANX_LV=[[60,'高度焦慮'],[30,'有點焦慮'],[0,'相對踏實']];
+const anxLv=v=>ANX_LV.find(l=>v>=l[0])[1];
+const ANX_MSG={
+ a:{'高度焦慮':'你的焦慮很真實，但它多半來自「不知道從哪開始」，不是你做不到。先把範圍縮小：不用學會所有工具，只要讓 AI 幫你完成一件本來就要做的事。',
+    '有點焦慮':'你已經在路上了。下一步不是追更多新工具，而是把一兩個用法練成固定習慣，讓 AI 真的幫你省下時間。',
+    '相對踏實':'你跟 AI 的關係很踏實。接下來的重點，是把 AI 放進你的商業模式，變成別人難以複製的優勢。'},
+ b:{'高度焦慮':'這份焦慮代表你看見了變化，這本身就是優勢。企業導入 AI 不需要一次到位，先挑一個最痛的流程做出成果，焦慮就會轉成方向。',
+    '有點焦慮':'你已經意識到 AI 的重要，也有初步行動。接下來要把零星嘗試收斂成一個有指標的試點。',
+    '相對踏實':'你對 AI 已經有清楚的判斷。接下來的關鍵是讓團隊跟上，把個人經驗變成公司的流程。'}};
+const ANX_STEPS={
+ a:['這週挑一件本來就要做的事，例如寫貼文、回訊息、整理筆記，全程讓 AI 協助一次','每天固定 15 分鐘，只用一個 AI 工具，連續 14 天，暫時不追新消息','寫下你事業裡「只有你能做」的三件事，AI 省下的時間都投在這裡'],
+ b:['先訂一頁 AI 使用規範：哪些資料可以用、哪些不行，團隊才敢放心用','挑一個最痛、最重複的流程做兩週試點，用數字比較前後差異','主管先用、先分享，讓員工看到的是「省事」，不是「被取代」']};
+function anxSec(){const v=anxiety();if(v==null)return'';const lv=anxLv(v);
+ return `<section class="sec anx"><h3>你的 AI 焦慮指數<small>AI ANXIETY</small></h3>
+  <div class="anx-top"><b>${v}</b><span>${lv}</span></div>
+  <div class="meter" role="img" aria-label="焦慮指數 ${v} / 100"><i style="left:${v}%"></i></div>
+  <div class="meter-l"><span>0 踏實</span><span>100 高度焦慮</span></div>
+  <p>${ANX_MSG[S.path][lv]}</p><ol class="steps">${ANX_STEPS[S.path].map(s=>`<li><span>${s}</span></li>`).join('')}</ol></section>`}
+async function copy(text,o,host){try{await navigator.clipboard.writeText(text);o.textContent='已複製'}catch(e){
+ const ta=el('textarea');ta.value=text;ta.style.cssText='width:100%;min-height:160px;font:inherit;margin-top:8px';host.append(ta);ta.select();o.textContent='請手動複製下方文字'}}
+
+function booking(summary,topic,need){
+ const name=S.ans.name&&S.ans.name.v!=='你'?S.ans.name.v:'';
+ const sec=el('section','sec book');sec.id='book';
+ sec.innerHTML=`<h3>預約一對一諮詢<small>BOOK A CALL</small></h3>
+ <p>${S.path==='a'?'我會跟你逐項看這份結果，確認最該先補的缺口，排出你的 90 天行動，並找出 AI 最能幫你省時間的地方。':'我會針對你選的痛點，找出最適合先導入 AI 的流程，看預算花在哪裡最有效，並排出 90 天試點。'}</p>
+ <label for="bk-name">稱呼<input id="bk-name" value="${esc(name)}" autocomplete="name"></label>
+ <div><div class="fine" style="margin-bottom:6px">方便的時段，可複選</div><div class="chips" id="bk-time">${['平日白天','平日晚上','週末'].map(t=>`<button type="button" aria-pressed="false">${t}</button>`).join('')}</div></div>
+ <label for="bk-topic">想先聊的事<textarea id="bk-topic">${esc(topic)}</textarea></label>
+ <div class="foot-actions"><a class="btn o" id="bk-line" target="_blank" rel="noopener">用 LINE 預約</a><button class="btn ghost" id="bk-copy" type="button">複製預約訊息</button><span class="copied" id="bk-copied" role="status"></span></div>
+ <p class="fine contact">按「用 LINE 預約」會打開 LINE，你填的內容和診斷結果已經寫好，按傳送就完成預約。還沒加好友的話，LINE 會先請你加入。沒有自動打開的話，先複製訊息，再到 LINE 搜尋 <code>${esc(CONTACT.line)}</code> 加好友後貼上。</p>`;
+ const msg=()=>{const n=sec.querySelector('#bk-name').value.trim(),tp=sec.querySelector('#bk-topic').value.trim();
+  const times=[...sec.querySelectorAll('#bk-time button[aria-pressed="true"]')].map(b=>b.textContent);
+  return [`你好，我做完了「AI 時代起步診斷」，想預約一對一諮詢。`,`稱呼：${n||'（未填）'}`,`方便時段：${times.join('、')||'都可以'}`,`身份：${P().label}`,`需求：${need}`,`診斷結果：${summary}`,`想先聊：${tp||'（未填）'}`].join('\n')};
+ const a=sec.querySelector('#bk-line');
+ const upd=()=>{a.href=`https://line.me/R/oaMessage/${encodeURIComponent(CONTACT.line)}/?${encodeURIComponent(msg())}`};
+ sec.querySelectorAll('#bk-time button').forEach(b=>b.onclick=()=>{b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')==='true'?'false':'true');upd()});
+ sec.querySelectorAll('input,textarea').forEach(i=>i.addEventListener('input',upd));
+ a.addEventListener('pointerdown',upd);a.addEventListener('focus',upd);upd();
+ sec.querySelector('#bk-copy').onclick=e=>copy(msg(),sec.querySelector('#bk-copied'),e.currentTarget.parentElement);
+ return sec}
+function tools(lines){const s=el('section','foot-actions');
+ s.innerHTML='<button class="btn ghost" type="button">複製完整報告</button><button class="btn ghost" type="button">回頭修改答案</button><button class="btn ghost" type="button">換身份重新評估</button><span class="copied" role="status"></span>';
+ const[c,e,r]=s.querySelectorAll('button');c.onclick=()=>copy(lines.filter(Boolean).join('\n'),s.querySelector('.copied'),s);e.onclick=()=>startTalk(false);r.onclick=reset;return s}
+function sign(){return el('p','fine',`診斷報告・作者 李煜。分數依自評計算，是一對一諮詢的起點，諮詢時會用訪談與實際資料校正。`)}
+
+/* ===================== 報告 A ===================== */
+const STRONG={X:'跟 AI 的距離近：你已經把 AI 當工具，這是現在最有槓桿的能力。',M:'動機清楚而且耐久：你知道為什麼要做、為什麼是你，這能撐過低潮期。',P:'心理素質穩：自律、抗壓和面對不確定的能力，符合創業的日常節奏。',A:'能力底子好：賣、算、做這幾件第一年最常卡住的事，你有實戰經驗。',R:'資源充足：跑道、人脈和時間讓你有空間犯錯、修正。',V:'點子有證據：已經有人用錢或行動證明這個需求存在。',T:'補位清楚：你的短板有人補，合作結構也比較安全。',L:'生活穩定：家人支持、停損點明確，能承受起伏。',C:'聽得進回饋：你願意根據證據調整，這讓每一次諮詢都更有效。'};
+const RX={X:['AI 運用還不熟','每天 15 分鐘，用 AI 處理一件本來就要做的事，連續 14 天','14 天','能說出 3 個固定使用 AI 的工作場景'],
+ M:['動機不夠清楚','寫下「不做的十年」和「做了的十年」對照，說清楚為什麼是你、為什麼是現在','7 天','能用一句話說出要服務誰、解決什麼問題'],
+ P:['自律或抗壓偏弱','建立固定工作節奏與每週檢討，找一位前輩或同儕團定期對話','持續進行','連續 8 週的週檢討紀錄'],
+ A:['核心能力有缺口','親自完成第一批成交，建立 12 個月收支表，並把最花時間的工作交給 AI','60 天','親手成交 ≥ 5 筆，說得出毛利與損益兩平'],
+ R:['資源或跑道不足','以副業起步，存到至少 6 個月生活預備金，並列出 10 位潛在客戶','3–12 個月','生活預備金達標、名單 ≥ 10 位'],
+ V:['市場驗證不足','深度訪談 20 位目標對象，再用預購或付費試用測試','30–60 天','訪談 ≥ 20 位、付費 ≥ 3 筆'],
+ T:['團隊補位不足','列出能力缺口，找合夥人、外包或 AI 工具補位；合夥就先簽協議','30–60 天','每個必要技能都有負責人或工具'],
+ L:['生活準備不足','開家庭會議，說明計畫、底線和停損點','14 天','家人同意的約定，加上時間、金額、指標三項停損點'],
+ C:['回饋接受度偏低','每次會談帶回一項客戶證據，先驗證、再辯護','每次會談','作業完成率']};
+const GR=[[85,'A','準備就緒','可以出發，接下來的重點是執行節奏與指標。'],[70,'B','大致就緒','可以出發，但補強項要在 90 天內完成。'],[55,'C','有潛力，還沒就緒','先用副業或小規模驗證 3–6 個月，達標再全職。'],[40,'D','有明顯缺口','先補能力或資源，或考慮加盟、接班、加入新創。'],[0,'E','現在先別急','重新釐清動機與生活條件，6 個月後重測。']];
+const PATH={go:['現在出發','人對、條件也到。全職投入，每週追蹤收入、現金和客戶數。'],prep:['先補條件再出發','人是對的，缺的是條件。以副業起步 3–6 個月，完成驗證、存足跑道再全職。'],form:['換個形式參與','條件夠，但人與事的契合度還不夠。可考慮加盟、接班、投資，或當合夥中的配角。'],no:['先累積，再出發','動機、能力和條件都還在累積。先在現職或副業中練習，6 個月後重測。']};
+const TYPE={rain:['造雨者','你的強項是拿訂單、談合作、找資源。','找一位營運型夥伴，或用 AI 與自動化把承諾變成穩定交付。'],cond:['指揮家','你的強項是建流程、帶團隊、控成本。','找一位銷售型夥伴負責開源。'],exp:['專家','你的強項是把產品或內容做到好，建立專業口碑。','找銷售與營運夥伴，或先從接案、內容累積受眾。']};
+function flagsA(){const a=S.ans,f=[],r=runway(a);
+ if(a.r_save&&(r<3||(a.r_cap&&a.r_cap.v===0)))f.push(['生活斷炊風險',`跑道約 ${r.toFixed(1)} 個月，或啟動資金主要靠借貸。`,'先存生活預備金，或改以副業起步。']);
+ if(a.l1&&a.l2&&a.l1.v===0&&a.l2.v===0)f.push(['家庭尚未取得共識','你是主要經濟來源，家人還不知道或反對。','先開家庭會議，談好底線與停損點。']);
+ if(a.v_ev&&a.l_plan&&a.v_ev.v<=1&&a.l_plan.v===0)f.push(['零驗證就全投入','證據還停在想法或親友意見，卻打算辭職並投入大部分積蓄。','先做 30 天低成本驗證，再決定是否全職。']);
+ if(a.m1&&a.m1.v===0&&sc('m2')<=2)f.push(['以逃離為主的動機','主要想離開現職，這件事與你的連結也偏弱。','先釐清動機，或考慮轉職而不是創業。']);
+ if(partner(a)&&a.t2&&a.t2.v===0)f.push(['合夥結構有風險','股權或分潤未談，或平分卻沒有退出機制。','先簽合夥協議：股權、分期兌現、退出、決策權。']);
+ if(a.r_debt&&a.r_debt.v===0)f.push(['有待處理的債務','有高利借貸、逾期或催收。','先完成債務規劃，再談創業資金。']);
+ if(a.l4&&a.l4.v===0)f.push(['身心狀態透支','最近半年長期透支或正處低潮。','先照顧好自己，必要時尋求專業協助，再來規劃。']);
+ if((a.c2&&a.c2.v===0)||(a.c_test&&a.c_test.v===0))f.push(['回饋接受度低','表示驗證不成立也會做，或對直接回饋的第一反應是否定。','先對齊期待：用證據說話，結果不如預期時願意調整。']);
+ return f}
+function quad(fit,ready){const Pd=34,W=264,x=v=>Pd+v*W,y=v=>8+W-v*W,t=.6;
+ let s=`<svg viewBox="0 0 ${W+Pd+12} ${W+44}" role="img" aria-label="適配度與準備度位置圖">`;
+ const box=(x0,y0,w,h,lbl,on)=>`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="6" fill="${on?'var(--accent-soft)':'var(--sunk)'}" fill-opacity="${on?1:.5}" stroke="${on?'var(--accent)':'none'}" stroke-width="1.5"/><text x="${x0+10}" y="${y0+20}" font-size="12.5" fill="${on?'var(--ink)':'var(--muted)'}" font-family="var(--f-body)" font-weight="${on?700:400}">${lbl}</text>`;
+ const inR=ready>=t,inF=fit>=t,g=3;
+ s+=box(x(0),y(1),W*t-g,W*(1-t)-g,'換個形式參與',!inF&&inR)+box(x(t)+g,y(1),W*(1-t)-g,W*(1-t)-g,'現在出發',inF&&inR)+box(x(0),y(t)+g,W*t-g,W*t-g,'先累積',!inF&&!inR)+box(x(t)+g,y(t)+g,W*(1-t)-g,W*t-g,'先補條件',inF&&!inR);
+ s+=`<circle cx="${x(Math.min(fit,1))}" cy="${y(Math.min(ready,1))}" r="8" fill="var(--accent)" stroke="var(--surface)" stroke-width="2.5"/>`;
+ s+=`<text x="${x(.5)}" y="${W+36}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="var(--f-body)">適配度 ${Math.round(fit*100)}% →</text>`;
+ s+=`<text x="${Pd-12}" y="${y(.5)}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="var(--f-body)" transform="rotate(-90 ${Pd-12} ${y(.5)})">準備度 ${Math.round(ready*100)}% →</text>`;
+ return s+'</svg>'}
+function reportA(){
+ const r=compute(),total=r.reduce((s,d)=>s+d.pts,0),fl=flagsA(),short=r.filter(d=>d.pct<.4);
+ const base=GR.findIndex(g=>total>=g[0]);let gi=base;
+ if(short.length===1)gi=Math.max(gi,1);if(short.length>=2)gi=Math.max(gi,2);if(fl.length)gi=Math.max(gi,2);
+ const g=GR[gi],by=k=>r.find(d=>d.k===k),sum=ks=>ks.reduce((s,k)=>s+by(k).pts,0)/ks.reduce((s,k)=>s+by(k).w,0);
+ const fit=sum(['X','M','P','A','C']),ready=sum(['R','V','T','L']);
+ const pk=fit>=.6&&ready>=.6?'go':fit>=.6?'prep':ready>=.6?'form':'no';
+ const ts={rain:avg([sc('a_sell'),sc('pl7'),sc('r_cust')]),cond:avg([sc('a_ops'),sc('ps3'),sc('a_fin')]),exp:avg([sc('a_prod'),sc('r_asset'),sc('m2')])};
+ const tk=Object.keys(ts).sort((a,b)=>ts[b]-ts[a])[0];
+ const strengths=[...r].sort((a,b)=>b.pct-a.pct).filter(d=>d.pct>=.5).slice(0,3);
+ const gaps=[...r].sort((a,b)=>a.pct-b.pct).slice(0,3);
+ const must=[['a_sell','銷售'],['a_fin','財務'],['a_prod',isCreator(S.ans)?'內容製作':'產品交付']].filter(([id])=>S.ans[id]&&S.ans[id].v===0).map(x=>x[1]);
+ const steps=[...fl.map(f=>[f[0],f[2]]),...gaps.map(d=>[RX[d.k][0],RX[d.k][1]])].slice(0,3);
+ const name=S.ans.name&&S.ans.name.v||'你',anx=anxiety();
+ const R=$('report');R.innerHTML='';
+ R.innerHTML=`
+ <section class="hero"><div class="eyebrow">起步準備度報告・${esc(P().label)}</div>
+  <div class="hero-top"><div class="grade" aria-label="等級 ${g[1]}">${g[1]}</div>
+  <div><h2>${esc(name)}，你目前是「${g[2]}」</h2><p>${g[3]}${gi>base?`　總分可到 ${GR[base][1]} 級，因${fl.length?'紅旗':''}${fl.length&&short.length?'與':''}${short.length?'短板':''}調為 ${g[1]} 級。`:''}</p></div></div>
+  <div class="tiles"><div class="tile"><em>準備度</em><b>${total.toFixed(0)}<small style="font-size:12px;opacity:.7"> /100</small></b></div>
+  <div class="tile"><em>AI 焦慮指數</em><b>${anx??'—'}</b></div><div class="tile"><em>建議路徑</em><b class="txt">${PATH[pk][0]}</b></div></div><button class="btn" type="button" data-book>預約一對一，聊你的結果 ↓</button></section>
+ ${anxSec()}
+ ${fl.length?`<section class="sec"><h3>先處理這些紅旗<small>${fl.length} RED FLAGS</small></h3><div class="list">${fl.map(f=>`<div class="flag"><b>${f[0]}</b><span>${f[1]}建議：${f[2]}</span></div>`).join('')}</div></section>`:''}
+ <section class="sec"><h3>九個面向的得分<small>SCORE BY AREA</small></h3><div class="viz"><div>${radar(r)}</div>${dimBars(r)}</div></section>
+ <section class="sec"><h3>建議路徑：${PATH[pk][0]}<small>FIT × READINESS</small></h3><div class="viz"><div>${quad(fit,ready)}</div><div style="display:grid;gap:8px"><p>${PATH[pk][1]}</p><p class="fine">適配度看 AI 適應力、動機、個性、能力、教練性；準備度看資源、驗證、團隊、生活。兩軸以 60% 為分界。</p></div></div></section>
+ <section class="sec"><h3>你的類型：${TYPE[tk][0]}<small>BUILDER TYPE</small></h3><p>${TYPE[tk][1]}</p><p class="fine">建議補位：${TYPE[tk][2]}</p></section>
+ <section class="sec"><h3>你的優勢<small>STRENGTHS</small></h3>${strengths.length?`<div class="list">${strengths.map(d=>`<div class="card"><b>${d.n}<span class="pct">${Math.round(d.pct*100)}%</span></b><span>${STRONG[d.k]}</span></div>`).join('')}</div>`:'<p class="fine">目前沒有超過 50% 的面向。先從下面的補強開始，優勢會在過程中浮現。</p>'}</section>
+ <section class="sec"><h3>先補這三件事<small>GAPS</small></h3><div class="list">${gaps.map(d=>`<div class="card"><b>${RX[d.k][0]}<span class="pct">${d.n} ${Math.round(d.pct*100)}%</span></b><span>${RX[d.k][1]}</span><div class="meta">期限 <span>${RX[d.k][2]}</span>　檢核 <span>${RX[d.k][3]}</span></div></div>`).join('')}
+  ${must.length?`<div class="card"><b>必要技能需要補位：${must.join('、')}</b><span>能賣、能算、能交付是第一年的最低門檻。這幾項你標為「不會」，需要夥伴、外包或 AI 工具負責。</span></div>`:''}</div></section>
+ <section class="sec"><h3>90 天行動計畫<small>NEXT 90 DAYS</small></h3><div class="plan">${steps.map((s,i)=>`<div><em>第 ${i*30+1}–${i*30+30} 天</em><b>${s[0]}</b><span>${s[1]}</span></div>`).join('')}</div><p class="fine">第 90 天重做一次這份診斷，比較前後的雷達圖。</p></section>`;
+ const summary=`${g[1]} 級・${g[2]}（${total.toFixed(1)} 分）${anx!=null?`；AI 焦慮指數 ${anx}`:''}`;
+ const need=['想創業','做自媒體','自媒體＋事業'][S.ans.kind?S.ans.kind.v:0];
+ R.append(booking(summary,[...fl.map(f=>f[0]),...gaps.map(d=>RX[d.k][0])].slice(0,3).join('、'),need));
+ R.append(tools([`AI 時代起步診斷｜${name}｜${P().label}`,`等級 ${g[1]}：${g[2]}（${total.toFixed(1)} / 100）`,anx!=null?`AI 焦慮指數：${anx}（${anxLv(anx)}）`:'',
+  ...(fl.length?['','【紅旗】',...fl.map(f=>`・${f[0]}：${f[2]}`)]:[]),'','【各面向】',...r.map(d=>`・${d.n} ${d.pts.toFixed(1)} / ${d.w}${d.pct<.4?'（短板）':''}`),
+  '',`【建議路徑】${PATH[pk][0]}：${PATH[pk][1]}`,`【類型】${TYPE[tk][0]}：${TYPE[tk][2]}`,'','【先補】',...gaps.map(d=>`・${RX[d.k][0]}：${RX[d.k][1]}`),
+  '','【90 天】',...steps.map((s,i)=>`・第 ${i*30+1}–${i*30+30} 天：${s[0]}，${s[1]}`)]),sign())}
+
+/* ===================== 報告 B ===================== */
+const STAGE=[[80,'擴散期','基礎、團隊和條件都到位，可以從單點試點擴大到跨部門流程。'],[60,'試點期','條件大致具備，適合挑一個痛點做 2–4 週試點，用數字證明成效。'],[40,'摸索期','有意願也有零星嘗試，但缺少痛點排序和推動機制。先把方向收斂。'],[0,'觀望期','還在觀望，焦慮多於方向。先從主管自己用起、訂好規範，再談導入。']];
+function notesB(){const a=S.ans,f=[];
+ if(a.g3&&a.g3.v===0&&a.h1&&a.h1.v>=2)f.push(['bad','資料外洩風險','已經有員工在用 AI，但公司沒有使用規範。','優先訂一頁 AI 使用規範，標明哪些資料不能交給 AI。']);
+ if(a.h1&&a.h1.v===0)f.push(['warn','團隊抗拒','員工對 AI 普遍抗拒或擔心被取代。','先從「幫員工省事」的場景切入，避免一開始就談人力精簡。']);
+ if(a.h2&&a.h2.v===0&&a.g2&&a.g2.v===0)f.push(['warn','沒有推動者也沒有預算','AI 導入沒有負責人，也還沒有預算。','先指定一位推動者，給他每週固定時間，再談工具和預算。']);
+ if(a.d2&&a.d2.v===0)f.push(['warn','資料散落','客戶與營運資料散在 LINE、紙本和個人電腦。','先把最常用的一份資料集中起來，AI 才有東西可以分析。']);
+ if(a.g1&&a.g1.v===0)f.push(['warn','需要說服決策者','AI 導入需要說服老闆。','用一個小試點的前後數字去說服，比簡報更有效。']);
+ return f}
+function reportB(){
+ const r=compute(),total=r.reduce((s,d)=>s+d.pts,0),st=STAGE.find(s=>total>=s[0]),nt=notesB(),anx=anxiety();
+ const name=S.ans.name&&S.ans.name.v||'你',pains=(S.ans.k1?S.ans.k1.v:[]).map(i=>PAINS[i]);
+ const hours=S.ans.k3?S.ans.k3.label:'不清楚',weak=[...r].sort((a,b)=>a.pct-b.pct)[0],first=pains[0];
+ const plan=[['盤點與規範',`訂一頁 AI 使用規範；${first?first[3]:'列出 3 個最痛、最重複的流程'}。主管先每天用 AI。`],
+  ['單點試點',`針對「${first?first[1]:'最痛的流程'}」做 2–4 週試點：${first?first[2]:'挑一個兩週內看得到成效的流程'}。記錄導入前後的工時與成果。`],
+  ['擴散與內化','把試點做法寫成 SOP，辦一場內部工作坊，挑下一個痛點複製同樣的方法。']];
+ const R=$('report');R.innerHTML=`
+ <section class="hero"><div class="eyebrow">AI 導入準備度報告・${[S.ans.size,S.ans.ind].filter(Boolean).map(x=>esc(x.label)).join('・')}</div>
+  <div class="hero-top"><div class="grade word" aria-label="階段 ${st[1]}">${st[1]}</div>
+  <div><h2>${esc(name)}，公司目前在「${st[1]}」</h2><p>${st[2]}</p></div></div>
+  <div class="tiles"><div class="tile"><em>導入準備度</em><b>${total.toFixed(0)}<small style="font-size:12px;opacity:.7"> /100</small></b></div>
+  <div class="tile"><em>AI 焦慮指數</em><b>${anx??'—'}</b></div><div class="tile"><em>重複工時／週</em><b class="txt">${esc(hours)}</b></div></div><button class="btn" type="button" data-book>預約一對一，聊導入規劃 ↓</button></section>
+ ${anxSec()}
+ <section class="sec"><h3>你們最痛的地方，AI 可以這樣幫<small>PAIN → AI</small></h3><div class="list">${pains.map((p,i)=>`<div class="card"><b>${i+1}. ${p[1]}</b><span>${p[2]}</span><div class="meta">這週先做：<span>${p[3]}</span></div></div>`).join('')}</div>
+  <p class="fine">${S.ans.k3&&S.ans.k3.v>0?`團隊每週約有「${esc(hours)}」花在重複性工作上。這是 AI 最容易先接手的部分，也是試點最好衡量成效的指標。`:'建議先記錄一週的重複性工時，這個數字會是衡量 AI 成效的基準。'}</p></section>
+ ${nt.length?`<section class="sec"><h3>導入前先注意<small>WATCH-OUTS</small></h3><div class="list">${nt.map(f=>`<div class="flag ${f[0]==='warn'?'warn':''}"><b>${f[1]}</b><span>${f[2]}建議：${f[3]}</span></div>`).join('')}</div></section>`:''}
+ <section class="sec"><h3>五個面向的得分<small>READINESS BY AREA</small></h3><div class="viz"><div>${radar(r)}</div><div style="display:grid;gap:10px">${dimBars(r)}<p class="fine">最需要先補的是「${weak.n}」。</p></div></div></section>
+ <section class="sec"><h3>90 天導入路線<small>NEXT 90 DAYS</small></h3><div class="plan">${plan.map((s,i)=>`<div><em>第 ${i*30+1}–${i*30+30} 天</em><b>${s[0]}</b><span>${s[1]}</span></div>`).join('')}</div></section>`;
+ const summary=`${st[1]}（${total.toFixed(1)} 分）${anx!=null?`；AI 焦慮指數 ${anx}`:''}`;
+ R.append(booking(summary,pains.map(p=>p[1]).join('、'),`企業 AI 導入（${[S.ans.role,S.ans.size].filter(Boolean).map(x=>x.label).join('・')}）`));
+ R.append(tools([`AI 導入準備度診斷｜${name}｜${P().label}`,`階段：${st[1]}（${total.toFixed(1)} / 100）`,anx!=null?`AI 焦慮指數：${anx}（${anxLv(anx)}）`:'',
+  '','【痛點與 AI 做法】',...pains.map(p=>`・${p[1]}：${p[2]}（這週先做：${p[3]}）`),`・每週重複性工時：${hours}`,
+  ...(nt.length?['','【導入前先注意】',...nt.map(f=>`・${f[1]}：${f[3]}`)]:[]),'','【各面向】',...r.map(d=>`・${d.n} ${d.pts.toFixed(1)} / ${d.w}`),
+  '','【90 天】',...plan.map((s,i)=>`・第 ${i*30+1}–${i*30+30} 天 ${s[0]}：${s[1]}`)]),sign())}
+
+function report(){keyMap=null;view('report');(S.path==='a'?reportA:reportB)();$('report').querySelectorAll('[data-book]').forEach(b=>b.onclick=goBook);$('report').querySelectorAll('.sec>h3').forEach(h=>{const b=el('button','chev',ICON.chev);b.type='button';b.setAttribute('aria-label','收合或展開');b.setAttribute('aria-expanded','true');h.append(b);h.onclick=()=>{const c=h.parentElement.classList.toggle('collapsed');b.setAttribute('aria-expanded',c?'false':'true')}});window.scrollTo({top:0})}
+function goBook(){const b=$('book');if(b){b.scrollIntoView({behavior:RM?'auto':'smooth',block:'start'});setTimeout(()=>{const i=$('bk-contact');if(i)i.focus({preventScroll:true})},RM?0:450)}};
+function reset(){S={path:null,ans:{}};save();home()}
+$('restart').onclick=reset;
+
+/* 啟動：做完的直接看報告，做到一半回首頁顯示「繼續作答」 */
+if(S.path&&PATHS[S.path]&&!nextQ())report();else{if(S.path&&!PATHS[S.path])S={path:null,ans:{}};home()}
+</script>
+
+</body>
+</html>
